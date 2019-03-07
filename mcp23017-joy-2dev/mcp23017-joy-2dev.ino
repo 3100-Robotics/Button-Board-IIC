@@ -112,8 +112,6 @@ void setup()
   Wire.write(0xff);   // invert all inputs - normally goes low on button press
   Wire.endTransmission();
   
-
-
   binaryDisplay(0);
   
 }
@@ -137,11 +135,17 @@ int whatBit( uint8_t num)
 int curButton = -1; // The current button that is active.  -1 means nothing active
                     // Previously set button - needed to know if button changes
 
+// map port bits to buttons reported to Joy interface
+// 8 spare buttons 20-27 mapped to unused pins on ports 1a and 2b
+int BMap1A[8] = {0,1,2,3,4,5,20,21};        // map buttons on expander 1 port A
+int BMap1B[8] = {-1,-1,-1,-1,-1,-1,-1,-1};  // map buttons on expander 1 port B - NONE - LEDS
+int BMap2A[8] = {6,7,8,9,10,11,12,13};      // map buttons on expander 2 port A
+int BMap2B[8] = {14,15,22,23,24,25,26,27};  // map buttons on expander 2 port B
+
 
 // returns curButton or -1 if no button is pressed
 int whatButton()
 {
-
   int thisButton = -1;    // what button do we see right now
   
   // check button values
@@ -155,22 +159,24 @@ int whatButton()
 //  Serial.println("--");
 //  delay(200);
 
-  if ( portData1a != 0x0 ) { // buttons 0-7
-    thisButton = whatBit( portData1a );  
-    if ( thisButton > 5 )
-      thisButton = -1; 
-  } else if ( portData2a != 0x0 ) { 
-    thisButton = whatBit( portData2a ) + 6;   // buttons 7 - 13
-  }  else if ( portData2b != 0x0 ) { 
-    thisButton = whatBit( portData2b ) + 14;   // buttons 7 - 13
-    if ( thisButton > 15 )
-      thisButton = -1;
+  if ( portData1a != 0x0 ) {                  // buttons 0-6 - hatch
+    thisButton = whatBit( portData1a );
+    if (thisButton > 0) {
+      thisButton = BMap1A[thisButton];
+    }
+  } else if ( portData2a != 0x0 ) {   // buttons 7 - 13
+    thisButton = whatBit( portData2a );
+    if (thisButton > 0) {
+      thisButton = BMap2A[thisButton];
+    }
+  }  else if ( portData2b != 0x0 ) {    // buttons 7 - 13
+    thisButton = whatBit( portData2b );
+    if (thisButton > 0) {
+      thisButton = BMap2B[thisButton];
+    }
   }
 
-
   return thisButton;
-
-  
 }
 
 void binaryDisplay(uint8_t num)
