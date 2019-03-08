@@ -142,6 +142,14 @@ int BMap1B[8] = {-1,-1,-1,-1,-1,-1,-1,-1};  // map buttons on expander 1 port B 
 int BMap2A[8] = {6,7,8,9,10,11,12,13};      // map buttons on expander 2 port A
 int BMap2B[8] = {14,15,22,23,24,25,26,27};  // map buttons on expander 2 port B
 
+int MaxButton = 27;
+
+// clear all the buttons - unused
+void clearButtons(){
+  for( int i = 0; i <= MaxButton; i++ ) {
+     Joystick.setButton( i, LOW);
+  }
+}
 
 // returns curButton or -1 if no button is pressed
 int whatButton()
@@ -212,24 +220,28 @@ void loop()
 
   int button =  whatButton();
 
-  if (button < 0) {
-    if ( curButton >= 0 ) {
-       Joystick.setButton(curButton, LOW);
-       curButton = -1;
-       return;
+  if (button < 0) {                     // no button is pressed
+    if ( curButton >= 0 ) {             // clear out the button that was pressed
+      Joystick.setButton(curButton, LOW);
+      curButton = -1;
+      binaryDisplay( 0 );               // turn off the diags LEDS
+      return;                           // nothing more to do
     }
-  } else {
-    if (button == curButton)    // do nothing button has not changed
-      return;
+  } else if (button != curButton) {     // different button pressed, 
+    if ( curButton >= 0 ) {             // A button was previously set
+      Joystick.setButton(curButton, LOW);
+    }  
   }
 
-  curButton = button;   // remember the button pressed
+  curButton = button;   // remember the button pressed (might already be same button)
 
-  if (curButton >= 0) {
+  // could check here to make sure curButton is not > max button
+  // the "button < 0" case above should ensure that curButton will always be >= 0 here
+  if (curButton >= 0) { // make sure that button is a real button (not -1)
     Joystick.setButton(curButton, HIGH);
     binaryDisplay( curButton+1 );
   } else {
-    binaryDisplay( 0 );
+    binaryDisplay( 0 ); // should never get here
   }
  
 }
